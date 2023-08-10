@@ -21,8 +21,16 @@ const WINNER_COMBOS = [
 
 function App() {
 
-    const [board, setBoard] = useState(Array(9).fill(null));
-    const [turn, setTurn] = useState(TURNS.x);
+    const [board, setBoard] = useState(() => {
+        const boardFromLocalStorage = window.localStorage.getItem("board");
+        return boardFromLocalStorage
+            ? JSON.parse(boardFromLocalStorage)
+            : Array(9).fill(null)
+    });
+    const [turn, setTurn] = useState(() => {
+        const turnFromLocalStorage = window.localStorage.getItem("turn");
+        return turnFromLocalStorage ?? TURNS.x
+    });
     const [winner, setWinner] = useState(null);
 
     const chekEndGame = (newBord) => {
@@ -33,13 +41,17 @@ function App() {
         if (board[i] || winner) return
         const newBord = [...board];
         newBord[i] = turn;
-        setBoard(newBord)
+        setBoard(newBord);
         const newTurn = turn === TURNS.x ? TURNS.o : TURNS.x;
         setTurn(newTurn);
-
-        const newWinner = checkWinner(newBord);
+        //guardar partida
+        window.localStorage.setItem("board", JSON.stringify(newBord));
+        window.localStorage.setItem("turn", newTurn);
+        const newWinner = checkWinner(newBord)
 
         if (newWinner) {
+            window.localStorage.removeItem("board")
+            window.localStorage.removeItem("turn")
             confetti({
                 particleCount: 300
             });
@@ -64,7 +76,9 @@ function App() {
     const resetGame = () => {
         setBoard(Array(9).fill(null));
         setTurn(TURNS.x);
-        setWinner(null)
+        setWinner(null);
+        window.localStorage.removeItem("board")
+        window.localStorage.removeItem("turn")
     }
 
     return (
@@ -73,7 +87,6 @@ function App() {
             <button onClick={resetGame}>Empezar de nuevo</button>
             <section className='game'>
                 {board.map((bord, i) => {
-                    console.log(bord);
                     return (
                         <Square
                             key={i}
